@@ -38,6 +38,15 @@ dependencies:
   syncfusion_flutter_calendar: ^24.1.45
   flutter_localizations:
     sdk: flutter
+  flutter_hooks: ^0.20.4
+  image_picker: ^1.0.7
+  file_picker: ^6.1.1
+  font_awesome_flutter: ^10.7.0
+  flutter_colorpicker: ^1.0.3
+  flutter_svg: ^2.0.9
+  universal_html: ^2.2.4
+  url_launcher: ^6.2.4
+  file_saver: ^0.2.9
 
 dev_dependencies:
   flutter_test:
@@ -62,8 +71,8 @@ flutter:
   uses-material-design: true
 
   # To add assets to your application, add an assets section, like this:
-  # assets:
-  #   - images/a_dot_burr.jpeg
+  assets:
+  - assets/svgs/
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see

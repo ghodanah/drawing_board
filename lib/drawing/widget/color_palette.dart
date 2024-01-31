@@ -62,7 +62,7 @@ class ColorPalette extends HookWidget {
               decoration: BoxDecoration(
                 color: selectedColor.value,
                 border: Border.all(color: Colors.blue, width: 1.5),
-                borderRadius: BorderRadius.all(Radius.circular(5)),
+                borderRadius: const BorderRadius.all(Radius.circular(5)),
               ),
             ),
             const SizedBox(width: 10,),
@@ -73,7 +73,7 @@ class ColorPalette extends HookWidget {
                   showColorWheel(context, selectedColor);
                 },
                 child: SvgPicture.asset(
-                  'asset/svgs/color_wheel.svg',
+                  'assets/svgs/color_wheel.svg',
                   height: 30,
                   width: 30,
                 ),

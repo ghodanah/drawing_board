@@ -6,8 +6,6 @@ import 'package:file_saver/file_saver.dart';
 import 'package:flutter/rendering.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:universal_html/html.dart' as html;
-
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -169,7 +167,7 @@ class CanvasSideBar extends HookWidget {
               'Shapes',
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
-            Divider(),
+            const Divider(),
             Wrap(
               alignment: WrapAlignment.start,
               spacing: 5,
@@ -242,11 +240,11 @@ class CanvasSideBar extends HookWidget {
               ],
             ),
             AnimatedSwitcher(
-              duration: Duration(milliseconds: 150),
+              duration: const Duration(milliseconds: 150),
               child: drawingMode.value == DrawingMode.polygon
                   ? Row(
                       children: [
-                        Text(
+                        const Text(
                           'Polygon Sides: ',
                           style: TextStyle(fontSize: 12),
                         ),
@@ -275,17 +273,17 @@ class CanvasSideBar extends HookWidget {
             ColorPalette(
               selectedColor: selectedColor,
             ),
-            SizedBox(
+            const SizedBox(
               height: 20,
             ),
-            Text(
+            const Text(
               'Size',
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
-            Divider(),
+            const Divider(),
             Row(
               children: [
-                Text(
+                const Text(
                   'Stroke Size: ',
                   style: TextStyle(fontSize: 12),
                 ),
@@ -301,7 +299,7 @@ class CanvasSideBar extends HookWidget {
             ),
             Row(
               children: [
-                Text(
+                const Text(
                   'Eraser Size: ',
                   style: TextStyle(fontSize: 12),
                 ),
@@ -315,21 +313,21 @@ class CanvasSideBar extends HookWidget {
                 ),
               ],
             ),
-            SizedBox(
+            const SizedBox(
               height: 20,
             ),
-            Text(
+            const Text(
               'Actions',
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
-            Divider(),
+            const Divider(),
             Wrap(
               children: [
                 TextButton(
                   onPressed: allSketches.value.isNotEmpty
                       ? () => undoRedoStack.value.undo()
                       : null,
-                  child: Text('Undo'),
+                  child: const Text('Undo'),
                 ),
                 ValueListenableBuilder<bool>(
                   valueListenable: undoRedoStack.value._canRedo,
@@ -337,13 +335,13 @@ class CanvasSideBar extends HookWidget {
                     return TextButton(
                       onPressed:
                           canRedo ? () => undoRedoStack.value.redo() : null,
-                      child: Text('Redo'),
+                      child: const Text('Redo'),
                     );
                   },
                 ),
                 TextButton(
                   onPressed: () => undoRedoStack.value.clear(),
-                  child: Text('Clear'),
+                  child: const Text('Clear'),
                 ),
                 TextButton(
                   onPressed: () async {
@@ -367,82 +365,81 @@ class CanvasSideBar extends HookWidget {
     );
   }
 
-//</editor-fold>
-}
-
-void saveFile(Uint8List bytes, String extension) async {
-  if (kIsWeb) {
-    html.AnchorElement()
-      ..href = '${Uri.dataFromBytes(bytes, mimeType: 'image/$extension')}'
-      ..download =
-          'FlutterLetsDraw-${DateTime.now().toIso8601String()}.$extension'
-      ..style.display = 'none'
-      ..click();
-  } else {
-    await FileSaver.instance.saveFile(
-      name: 'FlutterLetsDraw-${DateTime.now().toIso8601String()}.$extension',
-      bytes: bytes,
-      ext: extension,
-      mimeType: extension == 'png' ? MimeType.png : MimeType.jpeg,
-    );
+  void saveFile(Uint8List bytes, String extension) async {
+    if (kIsWeb) {
+      html.AnchorElement()
+        ..href = '${Uri.dataFromBytes(bytes, mimeType: 'image/$extension')}'
+        ..download =
+            'FlutterLetsDraw-${DateTime.now().toIso8601String()}.$extension'
+        ..style.display = 'none'
+        ..click();
+    } else {
+      await FileSaver.instance.saveFile(
+        name: 'FlutterLetsDraw-${DateTime.now().toIso8601String()}.$extension',
+        bytes: bytes,
+        ext: extension,
+        mimeType: extension == 'png' ? MimeType.png : MimeType.jpeg,
+      );
+    }
   }
-}
 
-Future<ui.Image> get _getImage async {
-  final completer = Completer<ui.Image>();
-  if (!kIsWeb && !Platform.isAndroid && !Platform.isIOS) {
-    final file = await FilePicker.platform.pickFiles(
-      type: FileType.image,
-      allowMultiple: false,
-    );
-    if (file != null) {
-      final filePath = file.files.single.path;
-      final bytes = filePath == null
-          ? file.files.first.bytes
-          : File(filePath).readAsBytesSync();
-      if (bytes != null) {
-        completer.complete(decodeImageFromList(bytes));
+  Future<ui.Image> get _getImage async {
+    final completer = Completer<ui.Image>();
+    if (!kIsWeb && !Platform.isAndroid && !Platform.isIOS) {
+      final file = await FilePicker.platform.pickFiles(
+        type: FileType.image,
+        allowMultiple: false,
+      );
+      if (file != null) {
+        final filePath = file.files.single.path;
+        final bytes = filePath == null
+            ? file.files.first.bytes
+            : File(filePath).readAsBytesSync();
+        if (bytes != null) {
+          completer.complete(decodeImageFromList(bytes));
+        } else {
+          completer.completeError('No image selected');
+        }
+      }
+    } else {
+      final image = await ImagePicker().pickImage(source: ImageSource.gallery);
+      if (image != null) {
+        final bytes = await image.readAsBytes();
+        completer.complete(
+          decodeImageFromList(bytes),
+        );
       } else {
         completer.completeError('No image selected');
       }
     }
-  } else {
-    final image = await ImagePicker().pickImage(source: ImageSource.gallery);
-    if (image != null) {
-      final bytes = await image.readAsBytes();
-      completer.complete(
-        decodeImageFromList(bytes),
+
+    return completer.future;
+  }
+
+  Future<void> _launchUrl(String url) async {
+    if (kIsWeb) {
+      html.window.open(
+        url,
+        url,
       );
     } else {
-      completer.completeError('No image selected');
+      if (!await launchUrl(Uri.parse(url))) {
+        throw 'Could not launch $url';
+      }
     }
   }
 
-  return completer.future;
-}
-
-Future<void> _launchUrl(String url) async {
-  if (kIsWeb) {
-    html.window.open(
-      url,
-      url,
-    );
-  } else {
-    if (!await launchUrl(Uri.parse(url))) {
-      throw 'Could not launch $url';
-    }
+  Future<Uint8List?> getBytes() async {
+    RenderRepaintBoundary boundary = canvasGlobalKey.currentContext
+        ?.findRenderObject() as RenderRepaintBoundary;
+    ui.Image image = await boundary.toImage();
+    ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+    Uint8List? pngBytes = byteData?.buffer.asUint8List();
+    return pngBytes;
   }
 }
+//</editor-fold>
 
-Future<Uint8List?> getBytes() async {
-  var canvasGlobalKey;
-  RenderRepaintBoundary boundary = canvasGlobalKey.currentContext
-      ?.findRenderObject() as RenderRepaintBoundary;
-  ui.Image image = await boundary.toImage();
-  ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
-  Uint8List? pngBytes = byteData?.buffer.asUint8List();
-  return pngBytes;
-}
 
 class _UndoRedoStack {
   _UndoRedoStack({
@@ -505,3 +502,5 @@ class _UndoRedoStack {
     sketchesNotifier.removeListener(_sketchesCountListener);
   }
 }
+
+

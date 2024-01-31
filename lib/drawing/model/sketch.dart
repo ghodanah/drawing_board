@@ -78,7 +78,7 @@ class Sketch {
   }
 }
 
-enum SketchType { scribble, line, square, circle, polygon }
+enum SketchType {scribble, line, square, circle, polygon}
 
 extension SketchTypeX on SketchType {
   String toRegularString() => toString().split('.')[1];
