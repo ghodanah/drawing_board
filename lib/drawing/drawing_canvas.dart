@@ -19,7 +19,6 @@ class DrawingCanvas extends HookWidget {
   final ValueNotifier<Sketch?> currentSketch;
   final ValueNotifier<List<Sketch>> allSketches;
   final GlobalKey canvasGlobalKey;
-  final ValueNotifier<int> polygonSides;
   final ValueNotifier<bool> filled;
 
   const DrawingCanvas({
@@ -28,15 +27,14 @@ class DrawingCanvas extends HookWidget {
     required this.width,
     required this.selectedColor,
     required this.strokeSize,
-    required this.backgroundImage,
     required this.eraserSize,
     required this.drawingMode,
     required this.sideBarController,
     required this.currentSketch,
     required this.allSketches,
     required this.canvasGlobalKey,
-    required this.polygonSides,
     required this.filled,
+    required this.backgroundImage,
   }) : super(key: key);
 
   @override
@@ -64,12 +62,12 @@ class DrawingCanvas extends HookWidget {
         color: drawingMode.value == DrawingMode.eraser
             ? kCanvasColor
             : selectedColor.value,
-        sides: polygonSides.value,
       ),
       drawingMode.value,
       filled.value,
     );
   }
+
   void onPointerMove(PointerMoveEvent details, BuildContext context) {
     final box = context.findRenderObject() as RenderBox;
     final offset = box.globalToLocal(details.position);
@@ -85,7 +83,6 @@ class DrawingCanvas extends HookWidget {
         color: drawingMode.value == DrawingMode.eraser
             ? kCanvasColor
             : selectedColor.value,
-        sides: polygonSides.value,
       ),
       drawingMode.value,
       filled.value,
@@ -104,7 +101,6 @@ class DrawingCanvas extends HookWidget {
         color: drawingMode.value == DrawingMode.eraser
             ? kCanvasColor
             : selectedColor.value,
-        sides: polygonSides.value,
       ),
       drawingMode.value,
       filled.value,
@@ -130,12 +126,13 @@ class DrawingCanvas extends HookWidget {
                   backgroundImage: backgroundImage.value,
                 ),
               ),
-            )
+            ),
           );
         },
       ),
     );
   }
+
   Widget buildCurrentPath(BuildContext context) {
     return Listener(
       onPointerDown: (details) => onPointerDown(details, context),
@@ -175,7 +172,7 @@ class SketchPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     if (backgroundImage != null) {
       canvas.drawImageRect(
-        backgroundImage as Image,
+        backgroundImage!,
         Rect.fromLTWH(
           0,
           0,
@@ -279,4 +276,3 @@ class SketchPainter extends CustomPainter {
     return oldDelegate.sketches != sketches;
   }
 }
-

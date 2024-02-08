@@ -15,8 +15,8 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Let\'s Draw',
-      theme: ThemeData(primarySwatch: Colors.blue, useMaterial3: false),
+      title: 'Drawing Board',
+      theme: ThemeData(primarySwatch: Colors.lightGreen, useMaterial3: false),
       debugShowCheckedModeBanner: false,
       home: const DrawingPage(),
     );

@@ -9,27 +9,27 @@ class Sketch {
   final bool filled;
   final int sides;
 
-  const Sketch({
+  Sketch({
     required this.points,
     this.color = Colors.black,
-    required this.size,
     this.type = SketchType.scribble,
     this.filled = true,
     this.sides = 3,
+    required this.size,
   });
 
   factory Sketch.fromDrawingMode(
-    Sketch sketch,
-    DrawingMode drawingMode,
-    bool filled,
-  ) {
+      Sketch sketch,
+      DrawingMode drawingMode,
+      bool filled,
+      ) {
     return Sketch(
       points: sketch.points,
       color: sketch.color,
       size: sketch.size,
       filled: drawingMode == DrawingMode.line ||
-              drawingMode == DrawingMode.pencil ||
-              drawingMode == DrawingMode.eraser
+          drawingMode == DrawingMode.pencil ||
+          drawingMode == DrawingMode.eraser
           ? false
           : filled,
       sides: sketch.sides,
@@ -52,6 +52,7 @@ class Sketch {
       }(),
     );
   }
+
   Map<String, dynamic> toJson() {
     List<Map> pointsMap = points.map((e) => {'dx': e.dx, 'dy': e.dy}).toList();
     return {
@@ -78,7 +79,7 @@ class Sketch {
   }
 }
 
-enum SketchType {scribble, line, square, circle, polygon}
+enum SketchType { scribble, line, square, circle, polygon }
 
 extension SketchTypeX on SketchType {
   String toRegularString() => toString().split('.')[1];

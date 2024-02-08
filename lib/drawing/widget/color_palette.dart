@@ -15,9 +15,7 @@ class ColorPalette extends HookWidget {
   @override
   Widget build(BuildContext context) {
     List<Color> colors = [
-      Colors.black,
-      Colors.white,
-      ...Colors.primaries,
+
     ];
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -92,7 +90,7 @@ void showColorWheel(BuildContext context, ValueNotifier<Color> color) {
     context: context,
     builder: (BuildContext context) {
       return AlertDialog(
-        title: const Text('Pick a color!'),
+        title: const Text('색을 선택하세요'),
         content: SingleChildScrollView(
           child: ColorPicker(
             pickerColor: color.value,
@@ -102,8 +100,8 @@ void showColorWheel(BuildContext context, ValueNotifier<Color> color) {
           ),
         ),
         actions: <Widget>[
-          TextButton(
-            child: const Text('Done'),
+          IconButton(
+            icon: const Icon(Icons.check),
             onPressed: () => Navigator.pop(context),
           ),
         ],

@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'dart:ui';
 
 import 'package:flutter/material.dart' hide Image;
@@ -8,6 +9,8 @@ import 'drawing_canvas.dart';
 import 'main(2).dart';
 import 'model/drawing_mode.dart';
 import 'model/sketch.dart';
+import 'repository/save_file.dart';
+import 'repository/undo_redo_stack.dart';
 
 class DrawingPage extends HookWidget {
   const DrawingPage({Key? key}) : super(key: key);
@@ -19,7 +22,6 @@ class DrawingPage extends HookWidget {
     final eraserSize = useState<double>(30);
     final drawingMode = useState(DrawingMode.pencil);
     final filled = useState<bool>(false);
-    final polygonSides = useState<int>(3);
     final backgroundImage = useState<Image?>(null);
 
     final canvasGlobalKey = GlobalKey();
@@ -32,6 +34,24 @@ class DrawingPage extends HookWidget {
       initialValue: 1,
     );
     return Scaffold(
+      appBar: AppBar(
+        leading: IconButton(
+          onPressed: () {
+            if (animationController.value == 0) {
+              animationController.forward();
+            } else {
+              animationController.reverse();
+            }
+          },
+          icon: const Icon(Icons.menu),
+        ),
+        title: Text('Drawing Board'),
+        actions: [
+          IconButton(
+              onPressed: () async {              },
+              icon: Icon(Icons.save))
+        ],
+      ),
       body: Stack(
         children: [
           Container(
@@ -50,12 +70,10 @@ class DrawingPage extends HookWidget {
               allSketches: allSketches,
               canvasGlobalKey: canvasGlobalKey,
               filled: filled,
-              polygonSides: polygonSides,
               backgroundImage: backgroundImage,
             ),
           ),
           Positioned(
-            top: kToolbarHeight + 10,
             // left: -5,
             child: SlideTransition(
               position: Tween<Offset>(
@@ -71,54 +89,11 @@ class DrawingPage extends HookWidget {
                 allSketches: allSketches,
                 canvasGlobalKey: canvasGlobalKey,
                 filled: filled,
-                polygonSides: polygonSides,
                 backgroundImage: backgroundImage,
               ),
             ),
           ),
-          _CustomAppBar(animationController: animationController),
         ],
-      ),
-    );
-  }
-}
-
-class _CustomAppBar extends StatelessWidget {
-  final AnimationController animationController;
-
-  const _CustomAppBar({Key? key, required this.animationController})
-      : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: kToolbarHeight,
-      width: double.maxFinite,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            IconButton(
-              onPressed: () {
-                if (animationController.value == 0) {
-                  animationController.forward();
-                } else {
-                  animationController.reverse();
-                }
-              },
-              icon: const Icon(Icons.menu),
-            ),
-            const Text(
-              'Let\'s Draw',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 19,
-              ),
-            ),
-            const SizedBox.shrink(),
-          ],
-        ),
       ),
     );
   }

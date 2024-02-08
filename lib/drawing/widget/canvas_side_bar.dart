@@ -1,3 +1,5 @@
+// ignore_for_file: unused_element
+
 import 'dart:async';
 import 'dart:io';
 import 'dart:ui' as ui;
@@ -17,6 +19,9 @@ import 'package:planner/drawing/widget/color_palette.dart';
 import 'package:planner/drawing/widget/icon_box.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../repository/save_file.dart';
+import '../repository/undo_redo_stack.dart';
+
 class CanvasSideBar extends HookWidget {
   final ValueNotifier<Color> selectedColor;
   final ValueNotifier<double> strokeSize;
@@ -26,10 +31,8 @@ class CanvasSideBar extends HookWidget {
   final ValueNotifier<List<Sketch>> allSketches;
   final GlobalKey canvasGlobalKey;
   final ValueNotifier<bool> filled;
-  final ValueNotifier<int> polygonSides;
   final ValueNotifier<ui.Image?> backgroundImage;
 
-//<editor-fold desc="Data Methods">
   const CanvasSideBar({
     Key? key,
     required this.selectedColor,
@@ -40,107 +43,21 @@ class CanvasSideBar extends HookWidget {
     required this.allSketches,
     required this.canvasGlobalKey,
     required this.filled,
-    required this.polygonSides,
     required this.backgroundImage,
   }) : super(key: key);
 
   @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is CanvasSideBar &&
-          runtimeType == other.runtimeType &&
-          selectedColor == other.selectedColor &&
-          strokeSize == other.strokeSize &&
-          eraserSize == other.eraserSize &&
-          drawingMode == other.drawingMode &&
-          currentSketch == other.currentSketch &&
-          allSketches == other.allSketches &&
-          canvasGlobalKey == other.canvasGlobalKey &&
-          filled == other.filled &&
-          polygonSides == other.polygonSides &&
-          backgroundImage == other.backgroundImage);
-
-  @override
-  int get hashCode =>
-      selectedColor.hashCode ^
-      strokeSize.hashCode ^
-      eraserSize.hashCode ^
-      drawingMode.hashCode ^
-      currentSketch.hashCode ^
-      allSketches.hashCode ^
-      canvasGlobalKey.hashCode ^
-      filled.hashCode ^
-      polygonSides.hashCode ^
-      backgroundImage.hashCode;
-
-  CanvasSideBar copyWith({
-    ValueNotifier<Color>? selectedColor,
-    ValueNotifier<double>? strokeSize,
-    ValueNotifier<double>? eraserSize,
-    ValueNotifier<DrawingMode>? drawingMode,
-    required ValueNotifier<Sketch?> currentSketch,
-    ValueNotifier<List<Sketch>>? allSketches,
-    GlobalKey? canvasGlobalKey,
-    ValueNotifier<bool>? filled,
-    ValueNotifier<int>? polygonSides,
-    required ValueNotifier<ui.Image?> backgroundImage,
-  }) {
-    return CanvasSideBar(
-      selectedColor: selectedColor ?? this.selectedColor,
-      strokeSize: strokeSize ?? this.strokeSize,
-      eraserSize: eraserSize ?? this.eraserSize,
-      drawingMode: drawingMode ?? this.drawingMode,
-      currentSketch: currentSketch ?? this.currentSketch,
-      allSketches: allSketches ?? this.allSketches,
-      canvasGlobalKey: canvasGlobalKey ?? this.canvasGlobalKey,
-      filled: filled ?? this.filled,
-      polygonSides: polygonSides ?? this.polygonSides,
-      backgroundImage: backgroundImage ?? this.backgroundImage,
-    );
-  }
-
-  Map<String, dynamic> toMap() {
-    return {
-      'selectedColor': this.selectedColor,
-      'strokeSize': this.strokeSize,
-      'eraserSize': this.eraserSize,
-      'drawingMode': this.drawingMode,
-      'currentSketch': this.currentSketch,
-      'allSketches': this.allSketches,
-      'canvasGlobalKey': this.canvasGlobalKey,
-      'filled': this.filled,
-      'polygonSides': this.polygonSides,
-      'backgroundImage': this.backgroundImage,
-    };
-  }
-
-  factory CanvasSideBar.fromMap(Map<String, dynamic> map) {
-    return CanvasSideBar(
-      selectedColor: map['selectedColor'] as ValueNotifier<Color>,
-      strokeSize: map['strokeSize'] as ValueNotifier<double>,
-      eraserSize: map['eraserSize'] as ValueNotifier<double>,
-      drawingMode: map['drawingMode'] as ValueNotifier<DrawingMode>,
-      currentSketch: map['currentSketch'] as ValueNotifier<Sketch>,
-      allSketches: map['allSketches'] as ValueNotifier<List<Sketch>>,
-      canvasGlobalKey: map['canvasGlobalKey'] as GlobalKey,
-      filled: map['filled'] as ValueNotifier<bool>,
-      polygonSides: map['polygonSides'] as ValueNotifier<int>,
-      backgroundImage: map['backgroundImage'] as ValueNotifier<ui.Image>,
-    );
-  }
-
-  @override
   Widget build(BuildContext context) {
     final undoRedoStack = useState(
-      _UndoRedoStack(
+      UndoRedoStack(
         sketchesNotifier: allSketches,
         currentSketchNotifier: currentSketch,
       ),
     );
     final scrollController = useScrollController();
     return Container(
-      width: 300,
-      height: MediaQuery.of(context).size.height < 680 ? 450 : 610,
+      width: double.maxFinite,
+      height: 130,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: const BorderRadius.horizontal(right: Radius.circular(10)),
@@ -149,7 +66,7 @@ class CanvasSideBar extends HookWidget {
             color: Colors.grey.shade200,
             blurRadius: 3,
             offset: const Offset(3, 3),
-          )
+          ),
         ],
       ),
       child: Scrollbar(
@@ -160,14 +77,7 @@ class CanvasSideBar extends HookWidget {
           padding: const EdgeInsets.all(10.0),
           controller: scrollController,
           children: [
-            const SizedBox(
-              height: 10,
-            ),
-            const Text(
-              'Shapes',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            const Divider(),
+            const SizedBox(height: 10),
             Wrap(
               alignment: WrapAlignment.start,
               spacing: 5,
@@ -176,211 +86,94 @@ class CanvasSideBar extends HookWidget {
                 IconBox(
                   iconData: FontAwesomeIcons.pencil,
                   selected: drawingMode.value == DrawingMode.pencil,
-                  onTap: () => drawingMode.value == DrawingMode.pencil,
+                  onTap: () => drawingMode.value = DrawingMode.pencil,
                   tooltip: 'Pencil',
-                ),
-                IconBox(
-                  selected: drawingMode.value == DrawingMode.line,
-                  onTap: () => drawingMode.value == DrawingMode.line,
-                  tooltip: 'Line',
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        width: 22,
-                        height: 2,
-                        color: drawingMode.value == DrawingMode.line
-                            ? Colors.grey[900]
-                            : Colors.grey,
-                      )
-                    ],
-                  ),
-                ),
-                IconBox(
-                  iconData: Icons.hexagon_outlined,
-                  selected: drawingMode.value == DrawingMode.polygon,
-                  onTap: () => drawingMode.value == DrawingMode.polygon,
-                  tooltip: 'Polygon',
                 ),
                 IconBox(
                   iconData: FontAwesomeIcons.eraser,
                   selected: drawingMode.value == DrawingMode.eraser,
-                  onTap: () => drawingMode.value == DrawingMode.eraser,
+                  onTap: () => drawingMode.value = DrawingMode.eraser,
                   tooltip: 'Eraser',
                 ),
-                IconBox(
-                  iconData: FontAwesomeIcons.square,
-                  selected: drawingMode.value == DrawingMode.square,
-                  onTap: () => drawingMode.value == DrawingMode.square,
-                  tooltip: 'Squre',
+                ColorPalette(
+                  selectedColor: selectedColor,
                 ),
-                IconBox(
-                  iconData: FontAwesomeIcons.circle,
-                  selected: drawingMode.value == DrawingMode.circle,
-                  onTap: () => drawingMode.value == DrawingMode.circle,
-                  tooltip: 'Circle',
+                IconButton(
+                  onPressed: allSketches.value.isNotEmpty
+                      ? () => undoRedoStack.value.undo()
+                      : null,
+                  icon: const Icon(Icons.arrow_back),
                 ),
-              ],
-            ),
-            const SizedBox(
-              height: 8,
-            ),
-            Row(
-              children: [
-                const Text(
-                  'Fill Shape: ',
-                  style: TextStyle(fontSize: 12),
-                ),
-                Checkbox(
-                  value: filled.value,
-                  onChanged: (val) {
-                    filled.value = val ?? false;
+                ValueListenableBuilder<bool>(
+                  valueListenable: undoRedoStack.value.canRedo,
+                  builder: (_, canRedo, __) {
+                    return IconButton(
+                      onPressed:
+                          canRedo ? () => undoRedoStack.value.redo() : null,
+                      icon: const Icon(Icons.arrow_forward),
+                    );
                   },
                 ),
+                IconButton(
+                  icon: Icon(Icons.delete_outline),
+                  onPressed: () => undoRedoStack.value.clear(),
+                ),
+                IconButton(
+                    onPressed: () async {
+                      if (backgroundImage.value != null) {
+                        backgroundImage.value = null;
+                      } else {
+                        backgroundImage.value = await _getImage;
+                      }
+                    },
+                    icon: Icon(Icons.image_outlined)),
               ],
             ),
+            const SizedBox(height: 8),
             AnimatedSwitcher(
               duration: const Duration(milliseconds: 150),
-              child: drawingMode.value == DrawingMode.polygon
+              child: drawingMode.value == DrawingMode.pencil
                   ? Row(
                       children: [
                         const Text(
-                          'Polygon Sides: ',
+                          'Size: ',
                           style: TextStyle(fontSize: 12),
                         ),
                         Slider(
-                          value: polygonSides.value.toDouble(),
-                          min: 3,
-                          max: 8,
-                          onChanged: (val) {
-                            polygonSides.value = val.toInt();
-                          },
-                          label: '${polygonSides.value}',
-                          divisions: 5,
-                        ),
+                            value: strokeSize.value,
+                            min: 0,
+                            max: 50,
+                            onChanged: (val) {
+                              strokeSize.value = val;
+                            }),
                       ],
                     )
                   : const SizedBox.shrink(),
             ),
-            const SizedBox(
-              height: 10,
-            ),
-            const Text(
-              'Colors',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            const Divider(),
-            ColorPalette(
-              selectedColor: selectedColor,
-            ),
-            const SizedBox(
-              height: 20,
-            ),
-            const Text(
-              'Size',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            const Divider(),
-            Row(
-              children: [
-                const Text(
-                  'Stroke Size: ',
-                  style: TextStyle(fontSize: 12),
-                ),
-                Slider(
-                  value: strokeSize.value,
-                  min: 0,
-                  max: 50,
-                  onChanged: (val) {
-                    strokeSize.value = val;
-                  },
-                ),
-              ],
-            ),
-            Row(
-              children: [
-                const Text(
-                  'Eraser Size: ',
-                  style: TextStyle(fontSize: 12),
-                ),
-                Slider(
-                  value: eraserSize.value,
-                  min: 0,
-                  max: 80,
-                  onChanged: (val) {
-                    eraserSize.value = val;
-                  },
-                ),
-              ],
-            ),
-            const SizedBox(
-              height: 20,
-            ),
-            const Text(
-              'Actions',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            const Divider(),
-            Wrap(
-              children: [
-                TextButton(
-                  onPressed: allSketches.value.isNotEmpty
-                      ? () => undoRedoStack.value.undo()
-                      : null,
-                  child: const Text('Undo'),
-                ),
-                ValueListenableBuilder<bool>(
-                  valueListenable: undoRedoStack.value._canRedo,
-                  builder: (_, canRedo, __) {
-                    return TextButton(
-                      onPressed:
-                          canRedo ? () => undoRedoStack.value.redo() : null,
-                      child: const Text('Redo'),
-                    );
-                  },
-                ),
-                TextButton(
-                  onPressed: () => undoRedoStack.value.clear(),
-                  child: const Text('Clear'),
-                ),
-                TextButton(
-                  onPressed: () async {
-                    if (backgroundImage.value != null) {
-                      backgroundImage.value = null;
-                    } else {
-                      backgroundImage.value = await _getImage;
-                    }
-                  },
-                  child: Text(
-                    backgroundImage.value == null
-                        ? 'Add Background'
-                        : 'Remove Background',
-                  ),
-                ),
-              ],
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 150),
+              child: drawingMode.value == DrawingMode.eraser
+                  ? Row(
+                      children: [
+                        const Text(
+                          'Size: ',
+                          style: TextStyle(fontSize: 12),
+                        ),
+                        Slider(
+                            value: eraserSize.value,
+                            min: 0,
+                            max: 80,
+                            onChanged: (val) {
+                              eraserSize.value = val;
+                            }),
+                      ],
+                    )
+                  : const SizedBox.shrink(),
             ),
           ],
         ),
       ),
     );
-  }
-
-  void saveFile(Uint8List bytes, String extension) async {
-    if (kIsWeb) {
-      html.AnchorElement()
-        ..href = '${Uri.dataFromBytes(bytes, mimeType: 'image/$extension')}'
-        ..download =
-            'FlutterLetsDraw-${DateTime.now().toIso8601String()}.$extension'
-        ..style.display = 'none'
-        ..click();
-    } else {
-      await FileSaver.instance.saveFile(
-        name: 'FlutterLetsDraw-${DateTime.now().toIso8601String()}.$extension',
-        bytes: bytes,
-        ext: extension,
-        mimeType: extension == 'png' ? MimeType.png : MimeType.jpeg,
-      );
-    }
   }
 
   Future<ui.Image> get _getImage async {
@@ -398,7 +191,7 @@ class CanvasSideBar extends HookWidget {
         if (bytes != null) {
           completer.complete(decodeImageFromList(bytes));
         } else {
-          completer.completeError('No image selected');
+          completer.completeError('이미지가 선택되지 않았습니다.');
         }
       }
     } else {
@@ -409,11 +202,20 @@ class CanvasSideBar extends HookWidget {
           decodeImageFromList(bytes),
         );
       } else {
-        completer.completeError('No image selected');
+        completer.completeError('이미지가 선택되지 않았습니다.');
       }
     }
 
     return completer.future;
+  }
+
+  Future<Uint8List?> getBytes() async {
+    RenderRepaintBoundary boundary = canvasGlobalKey.currentContext
+        ?.findRenderObject() as RenderRepaintBoundary;
+    ui.Image image = await boundary.toImage();
+    ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+    Uint8List? pngBytes = byteData?.buffer.asUint8List();
+    return pngBytes;
   }
 
   Future<void> _launchUrl(String url) async {
@@ -428,79 +230,4 @@ class CanvasSideBar extends HookWidget {
       }
     }
   }
-
-  Future<Uint8List?> getBytes() async {
-    RenderRepaintBoundary boundary = canvasGlobalKey.currentContext
-        ?.findRenderObject() as RenderRepaintBoundary;
-    ui.Image image = await boundary.toImage();
-    ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
-    Uint8List? pngBytes = byteData?.buffer.asUint8List();
-    return pngBytes;
-  }
 }
-//</editor-fold>
-
-
-class _UndoRedoStack {
-  _UndoRedoStack({
-    required this.sketchesNotifier,
-    required this.currentSketchNotifier,
-  }) {
-    _sketchCount = sketchesNotifier.value.length;
-    sketchesNotifier.addListener(_sketchesCountListener);
-  }
-
-  final ValueNotifier<List<Sketch>> sketchesNotifier;
-  final ValueNotifier<Sketch?> currentSketchNotifier;
-
-  ///Collection of sketches that can be redone.
-  late final List<Sketch> _redoStack = [];
-
-  ///Whether redo operation is possible.
-  ValueNotifier<bool> get canRedo => _canRedo;
-  late final ValueNotifier<bool> _canRedo = ValueNotifier(false);
-
-  late int _sketchCount;
-
-  void _sketchesCountListener() {
-    if (sketchesNotifier.value.length > _sketchCount) {
-      //if a new sketch is drawn,
-      //history is invalidated so clear redo stack
-      _redoStack.clear();
-      _canRedo.value = false;
-      _sketchCount = sketchesNotifier.value.length;
-    }
-  }
-
-  void clear() {
-    _sketchCount = 0;
-    sketchesNotifier.value = [];
-    _canRedo.value = false;
-    currentSketchNotifier.value = null;
-  }
-
-  void undo() {
-    final sketches = List<Sketch>.from(sketchesNotifier.value);
-    if (sketches.isNotEmpty) {
-      _sketchCount--;
-      _redoStack.add(sketches.removeLast());
-      sketchesNotifier.value = sketches;
-      _canRedo.value = true;
-      currentSketchNotifier.value = null;
-    }
-  }
-
-  void redo() {
-    if (_redoStack.isEmpty) return;
-    final sketch = _redoStack.removeLast();
-    _canRedo.value = _redoStack.isNotEmpty;
-    _sketchCount++;
-    sketchesNotifier.value = [...sketchesNotifier.value, sketch];
-  }
-
-  void dispose() {
-    sketchesNotifier.removeListener(_sketchesCountListener);
-  }
-}
-
-
