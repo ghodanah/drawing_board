@@ -5,7 +5,7 @@ import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:planner/drawing/model/drawing_mode.dart';
 import 'package:planner/drawing/model/sketch.dart';
 
-import 'main(2).dart';
+import '../main(2).dart';
 
 class DrawingCanvas extends HookWidget {
   final double height;
